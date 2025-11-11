@@ -8,11 +8,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Exécutable serveur
 add_executable(node_chat src/node_chat.cpp)
 
-# 👉 1) Inclure Asio (standalone)
-target_include_directories(node_chat PRIVATE ${CMAKE_SOURCE_DIR}/external/asio-master/include)
-
-# 👉 1.2) Inclure les fichier de /src --> notamment protocol.hpp
-target_include_directories(node_chat PRIVATE ${CMAKE_SOURCE_DIR}/src)
+# 👉 1) Inclure Asio (standalone)  1.2) Inclure les fichier de /src --> notamment protocol.hpp
+target_include_directories(node_chat PRIVATE 
+        ${CMAKE_SOURCE_DIR}/external/asio-master/include
+        ${CMAKE_SOURCE_DIR}/src)
 
 
 # 👉 2) Dire à Asio qu'on est en standalone (sans Boost)

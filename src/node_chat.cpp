@@ -7,8 +7,13 @@
 #include <thread>
 #include <mutex>
 #include <atomic>
+#include <functional>
 
-#include "protocol.hpp"      // helpers de protocole
+#include "p2p_protocol.hpp"      // helpers de protocole
+
+#ifndef P2P_PROTOCOL_HEADER
+# error "❌ Mauvais header: p2p_protocol.hpp non chargé ou header conflit."
+#endif
 
 using asio::ip::tcp;
 
@@ -190,7 +195,7 @@ private:
     void start_accept() {
         auto session = std::make_shared<Session>(io_,
             [this_weak = weak_from_this()](const std::string& l, std::shared_ptr<Session> s) {
-                if (auto self = this_.lock()) self->on_line_received(l, s);
+                if (auto self = this_weak.lock()) self->on_line_received(l, s);
             });
         acceptor_.async_accept(session->socket(),
             [this, session](std::error_code ec) {
@@ -221,7 +226,7 @@ private:
         auto results = resolver.resolve(host, std::to_string(port));
         auto session = std::make_shared<Session>(io_,
             [this_weak = weak_from_this()](const std::string& l, std::shared_ptr<Session> s) {
-                if (auto self = this_.lock()) self->on_line_received(l, s);
+                if (auto self = this_weak.lock()) self->on_line_received(l, s);
             });
 
         asio::async_connect(session->socket(), results,
