@@ -1,0 +1,21 @@
+# CMake / builds
+/build/
+/CMakeFiles/
+/CMakeCache.txt
+*.cmake
+compile_commands.json
+
+# VS Code
+.vscode/
+
+# Fichiers de debug macOS
+*.dSYM/
+
+# macOS metadata
+.DS_Store
+*/.DS_Store
+**/.DS_Store
+
+#Other files
+cpp_survival_kit.md
+Cpp Survival Kit.pdf
