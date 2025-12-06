@@ -148,8 +148,9 @@ public:
         });
     }
 
-    ~Node() {
-        if (input_thread_.joinable()) input_thread_.join();
+    ~Node() { // arrêt propre du thread input_thread
+        if (input_thread_.joinable()) 
+        input_thread_.join();
     }
 
     // Callback principal: chaque Session appelle ceci quand une ligne arrive
@@ -200,7 +201,7 @@ private:
         acceptor_.async_accept(session->socket(),
             [this, session](std::error_code ec) {
                 if (!ec) {
-                    add_session(session);
+                    add_session(session); // ajoute la session à la liste des sessions ouvertes avec le noeud
                     session->start();
 
                     // Dès qu'une session entrante s'ouvre, on lui envoie notre JOIN
@@ -271,7 +272,7 @@ private:
         maybe_connect_if_new(host, port);
 
         // Transmet le JOIN aux autres pairs (gossip/flood)
-        relay_to_others(make_JOIN(nid, host, port), src);
+        // comment pour le moment --> relay_to_others(make_JOIN(nid, host, port), src);
     }
 
     void handle_PEERS(const ParsedLine& p, std::shared_ptr<Session> /*src*/) {
@@ -355,10 +356,27 @@ private:
     void maybe_connect_if_new(const std::string& host, uint16_t port) {
         // Heuristique simple: tente une connexion si l'endpoint n'est pas "nous"
         // et si l'on a peu de connexions (pour éviter trop d'arêtes).
-        if ((host == "127.0.0.1" || host == "localhost") && port == listen_port_) return;
+        if ((host == "127.0.0.1" || host == "localhost") && port == listen_port_) 
+            return;
+        // si on est déjà connecté, on arret de se connecter
+        if (has_session_to(host, port))
+            return;
+
         // Pour rester simple, on tente de se connecter (si déjà connecté, ce sera juste une duplication temporaire)
         connect_to(host, port);
     }
+
+    bool has_session_to(const std::string& host, uint16_t port) {
+    std::string hp = to_hostport(host, port);
+    std::lock_guard<std::mutex> lg(mu_);
+    for (auto& w : sessions_) {
+        if (auto s = w.lock()) {
+            if (s->remote_endpoint_str() == hp) 
+                return true;
+        }
+    }
+    return false;
+}
 
     // Déduction naïve de "notre" host à annoncer (pour usage local)
     std::string local_host_guess() const {
